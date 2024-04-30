@@ -208,6 +208,29 @@ jobs:
           path: stable.xml
           if-no-files-found: ignore
 
+  android_ndk:
+    needs: [context]
+    runs-on: ${{ needs.context.outputs.windows_build_runner }}
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: download ndk
+        run: |
+          $NDKURL = "https://dl.google.com/android/repository/android-ndk-r26b-windows.zip"
+          $NDKHash = "A478D43D4A45D0D345CDA6BE50D79642B92FB175868D9DC0DFC86181D80F691E"
+          curl.exe -sL $NDKURL -o $env:TEMP\android-ndk-r26b-windows.zip
+          $SHA256 = Get-FileHash -Path $env:TEMP\android-ndk-r26b-windows.zip -Algorithm SHA256
+          if ($SHA256.Hash -ne $NDKHash) {
+            throw "NDK SHA256 mismatch ($($SHA256.Hash) vs $$NDKHash)"
+          }
+
+          New-Item -ItemType Directory -Path ${{ github.workspace }}\BuildRoot\Library
+          unzip.exe -j -o $env:TEMP\android-ndk-r26b-windows.zip -d ${{ github.workspace }}\BuildRoot\Library
+          dir ${{ github.workspace }}\BuildRoot\Library
+          throw "early exit"
+
   sqlite:
     needs: [context]
     runs-on: ${{ needs.context.outputs.windows_build_runner }}
